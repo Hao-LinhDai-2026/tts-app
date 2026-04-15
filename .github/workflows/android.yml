@@ -10,8 +10,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Tự động tạo linh kiện thiếu (styles, icon) để lò không báo lỗi
-      - name: Create missing resources
+      # Tự động tạo linh kiện còn thiếu để hệ thống không báo lỗi
+      - name: Prepare Resources
         run: |
           mkdir -p app/src/main/res/values
           echo '<resources><style name="AppTheme" parent="android:Theme.Light.NoTitleBar"/></resources>' > app/src/main/res/values/styles.xml
@@ -20,9 +20,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build APK
+      - name: Build APK (Force)
         run: |
-          chmod +x gradlew || true
           gradle assembleDebug --stacktrace
 
       - name: Upload APK
