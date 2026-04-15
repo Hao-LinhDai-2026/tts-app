@@ -1,37 +1,40 @@
-name: Build APK
+name: Build APK Supreme
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Tự động vá lỗi thiếu khung xương (Manifest, Styles, Folders)
-      - name: Auto-fix Project Structure
+      # PHÁP TRẬN CẢI TẠO CẤU TRÚC: Ép máy chủ nhận diện module 'app'
+      - name: Repair Project Structure
         run: |
+          # Tạo lại file kết nối nếu bị thiếu
+          echo "include ':app'" > settings.gradle
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/drawable
-          # Tạo Manifest nếu chưa có
+          # Tạo bản thiết kế AndroidManifest chuẩn nếu bị khuyết
           if [ ! -f app/src/main/AndroidManifest.xml ]; then
-            echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.tts"><application android:label="TTS App" android:theme="@style/AppTheme"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+            echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.hao.ttsapp"><application android:label="TTS App" android:theme="@android:style/Theme.DeviceDefault.Light.NoTitleBar"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           fi
-          # Tạo styles cứu sinh
+          # Tạo file styles để tránh lỗi giao diện
           echo '<resources><style name="AppTheme" parent="android:Theme.Material.Light.NoTitleBar"/></resources>' > app/src/main/res/values/styles.xml
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build APK (No-Daemon Mode)
+      # LỆNH TRIỆU HỒI TỐI CAO: Chỉ đích danh mục tiêu ':app:assembleDebug'
+      - name: Divine Build Command
         run: |
-          chmod +x gradlew || true
-          gradle assembleDebug --no-daemon --stacktrace
+          gradle :app:assembleDebug --no-daemon --stacktrace || gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-final
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
