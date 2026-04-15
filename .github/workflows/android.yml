@@ -10,19 +10,25 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Tự động tạo linh kiện còn thiếu để hệ thống không báo lỗi
-      - name: Prepare Resources
+      # Tự động vá lỗi thiếu khung xương (Manifest, Styles, Folders)
+      - name: Auto-fix Project Structure
         run: |
           mkdir -p app/src/main/res/values
-          echo '<resources><style name="AppTheme" parent="android:Theme.Light.NoTitleBar"/></resources>' > app/src/main/res/values/styles.xml
           mkdir -p app/src/main/res/drawable
+          # Tạo Manifest nếu chưa có
+          if [ ! -f app/src/main/AndroidManifest.xml ]; then
+            echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.tts"><application android:label="TTS App" android:theme="@style/AppTheme"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          fi
+          # Tạo styles cứu sinh
+          echo '<resources><style name="AppTheme" parent="android:Theme.Material.Light.NoTitleBar"/></resources>' > app/src/main/res/values/styles.xml
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build APK (Force)
+      - name: Build APK (No-Daemon Mode)
         run: |
-          gradle assembleDebug --stacktrace
+          chmod +x gradlew || true
+          gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
